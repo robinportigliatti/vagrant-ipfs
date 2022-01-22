@@ -2,14 +2,6 @@
 
 Suivre le tuto d'installation [ici](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-and-upgrading-ansible-with-pip).
 
-# Configurer ansible
-
-```
-touch ~/.vault_pass.txt
-echo 'b#kPs?9FpQ!M' > ~/.vault_pass.txt
-export ANSIBLE_VAULT_PASSWORD_FILE=~/.vault_pass.txt
-```
-
 # Installer vagrant
 
 Suivre le tuto d'installation [ici](https://www.vagrantup.com/docs/installation).
@@ -21,6 +13,7 @@ Si vous utiliser `libvirt` pour la virtualisation il faudra installer le plugin 
 ```
 vagrant plugin install libvirt
 ```
+
 # Création des VMs
 
 Pour lancer la création et la provision de toutes les VMs :
