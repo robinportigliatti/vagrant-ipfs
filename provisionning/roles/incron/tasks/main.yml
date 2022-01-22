@@ -1,0 +1,11 @@
+# roles/incron/tasks/main.yml
+---
+  - name: "Centos: Install packages"
+    yum:
+      name: "epel-release"
+      state: "latest"
+
+  - name: "Centos: Install packages"
+    yum:
+      name: "incron"
+      state: "latest"

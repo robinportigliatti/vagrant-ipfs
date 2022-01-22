@@ -1,0 +1,41 @@
+# roles/go-ipfs/tasks/initialize.yml
+---
+  - name: "Ipfs init"
+    become_user: "{{ ipfs_sys_user_name }}"
+    shell: "/usr/local/bin/ipfs init"
+    ignore_errors: yes
+
+  - name: "Copying swarm.key"
+    template:
+      src: swarm.key.j2
+      dest: "{{ ipfs_sys_user_home }}/.ipfs/swarm.key"
+      owner: "{{ ipfs_sys_user_name }}"
+      group: "{{ ipfs_sys_group_name }}"
+      mode: 0644
+
+  - name: Copying config
+    template:
+      src: config.j2
+      dest: "{{ ipfs_sys_user_home }}/.ipfs/config"
+      owner: "{{ ipfs_sys_user_name }}"
+      group: "{{ ipfs_sys_group_name }}"
+      mode: 0644
+
+  - name: ensure systemd system services directory exists
+    become: yes
+    file:
+      path: /etc/systemd/system
+      state: directory
+
+# installing ipfs service
+
+  - name: "Copying ipfs.service"
+    template:
+      src: ipfs.service.j2
+      dest: "/etc/systemd/system/ipfs.service"
+      owner: "root"
+      group: "root"
+      mode: 0644
+    notify:
+      - "reload systemd"
+      - "restart IPFS"

@@ -1,0 +1,8 @@
+# roles/common/defaults/main.yml
+---
+  common_packages:
+    - "nano"
+    - "sudo"
+    - "wget"
+    - "git"
+    - "epel-release"

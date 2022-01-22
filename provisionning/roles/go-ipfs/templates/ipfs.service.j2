@@ -1,0 +1,11 @@
+[Unit]
+Description=IPFS daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/ipfs daemon --enable-pubsub-experiment
+Restart=on-failure
+User={{ ipfs_sys_user_name }}
+
+[Install]
+WantedBy=multi-user.target

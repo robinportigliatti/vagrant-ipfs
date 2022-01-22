@@ -1,0 +1,68 @@
+# roles/ipfs-cluster/tasks/main.yml
+---
+  #- name: "make ipfs group"
+  #  group:
+  #    state: present
+  #    name: "{{ ipfs_cluster_sys_group_name }}"
+
+  #- name: make ipfs user
+  #  user:
+  #    state: present
+  #    name: "{{ ipfs_cluster_sys_user_name }}"
+  #    group: "{{ ipfs_cluster_sys_group_name }}"
+  #    shell: /bin/bash
+  #    home: "{{ ipfs_cluster_sys_user_home }}"
+  #    comment: IPFS user
+  #    system: yes
+
+  - name: "Extracting ipfs-cluster archives"
+    ansible.builtin.unarchive:
+      src: "{{ current_ipfs_cluster_tar.src }}"
+      dest: "/opt"
+      remote_src: "yes"
+      validate_certs: "no"
+    with_items:
+      - "{{ ipfs_cluster_tars }}"
+    loop_control:
+      loop_var: current_ipfs_cluster_tar
+
+  - name: "Installing ipfs-cluster-ctl"
+    shell: "cp /opt/ipfs-cluster-ctl/ipfs-cluster-ctl /usr/local/bin/ipfs-cluster-ctl"
+
+  - name: "Installing ipfs-cluster-follow"
+    shell: "cp /opt/ipfs-cluster-follow/ipfs-cluster-follow /usr/local/bin/ipfs-cluster-follow"
+
+  - name: "Installing ipfs-cluster-service"
+    shell: "cp /opt/ipfs-cluster-service/ipfs-cluster-service /usr/local/bin/ipfs-cluster-service"
+
+  - name: "Ipfs cluster init"
+    become_user: "{{ ipfs_cluster_sys_user_name }}"
+    shell: "/usr/local/bin/ipfs-cluster-service init --force"
+    ignore_errors: yes
+
+  - name: "Copying identity.json"
+    template:
+      src: identity.json.j2
+      dest: "{{ ipfs_cluster_sys_user_home }}/.ipfs-cluster/identity.json"
+      owner: "{{ ipfs_cluster_sys_user_name }}"
+      group: "{{ ipfs_cluster_sys_group_name }}"
+      mode: 0644
+
+  - name: "Copying service.json"
+    template:
+      src: service.json.j2
+      dest: "{{ ipfs_cluster_sys_user_home }}/.ipfs-cluster/service.json"
+      owner: "{{ ipfs_cluster_sys_user_name }}"
+      group: "{{ ipfs_cluster_sys_group_name }}"
+      mode: 0644
+
+  - name: "Copying ipfs-cluster.service"
+    template:
+      src: ipfs-cluster.service.j2
+      dest: "/etc/systemd/system/ipfs-cluster.service"
+      owner: "root"
+      group: "root"
+      mode: 0644
+    notify:
+      - "reload systemd"
+      - "restart IPFS Cluster"

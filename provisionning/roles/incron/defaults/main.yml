@@ -1,0 +1,7 @@
+# roles/incron/defaults/main.yml
+---
+  incron_incrontab:
+    - path: "/tmp/demo/pg_wal"
+      mask: "IN_CLOSE_WRITE,recursive=true"
+      command: "/usr/bin/bash /tmp/ipfs-cluster-ctl_add.bash $@/$#"
+  archive_command: ""

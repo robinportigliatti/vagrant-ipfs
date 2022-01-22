@@ -1,0 +1,3 @@
+{% for peer in ipfs_cluster_peers %}
+/ip4/{{ peer.ip }}/tcp/9096/ipfs/{{ peer.id }}
+{% endfor %}

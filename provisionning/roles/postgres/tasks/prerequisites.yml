@@ -1,0 +1,15 @@
+# roles/postgres/tasks/prerequisites.yml
+---
+  - name: "CentOs: Install prerequisites"
+    yum:
+      name: "python-psycopg2"
+      state: "latest"
+      update_cache: "yes"
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+  - name: "Debian: Install prerequisites"
+    apt:
+      name: libpq-dev, python3-dev, gpg
+      state: "latest"
+      update_cache: "yes"
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'

@@ -1,0 +1,56 @@
+---
+  - name: Copy ipfs-pubsub-listen-demo.bash
+    ansible.builtin.copy:
+      src: ipfs-pubsub-listen-demo.bash
+      dest: /usr/local/bin/ipfs-pubsub-listen-demo.bash
+      owner: "{{ ipfs_sys_user_name }}"
+      group: "{{ ipfs_sys_group_name }}"
+      mode: '0755'
+    when: postgres_role == "standby"
+
+  - name: "Copying ipfs-pubsub-listen-demo.service"
+    template:
+      src: ipfs-pubsub-listen-demo.service.j2
+      dest: "/etc/systemd/system/ipfs-pubsub-listen-demo.service"
+      owner: "root"
+      group: "root"
+      mode: 0644
+    when: postgres_role == "standby"
+    notify:
+      - "reload systemd"
+      - "restart ipfs-pubsub-listen-demo"
+
+  - name: Clean up PostgreSQL data directory
+    become_user: postgres
+    file:
+      path: /var/lib/pgsql/{{ postgres_version }}/data
+      force: yes
+      state: absent
+    when: postgres_role == "standby"
+
+  - name: Clone primary node data
+    become_user: postgres
+    shell: |
+      /usr/pgsql-{{ postgres_version }}/bin/pg_basebackup -R -P -D "/var/lib/pgsql/{{ postgres_version }}/data" -c fast -p 5432 -h ipfs_1 -U replicator -w
+    ignore_errors: no
+    when: postgres_role == "standby"
+
+  - name: Copy database configuration
+    template:
+      src: full_postgresql.conf.j2
+      dest: "/var/lib/pgsql/{{ postgres_version }}/data/postgresql.conf"
+      group: postgres
+      mode: '0644'
+      owner: postgres
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' and postgres_role == "standby"
+
+  - name: Clean up PostgreSQL data directory
+    become_user: postgres
+    file:
+      path: /var/lib/pgsql/{{ postgres_version }}/data/postgresql.auto.conf
+      force: yes
+      state: absent
+    when: postgres_role == "standby"
+    notify:
+      - "reload systemd"
+      - "restart postgres"

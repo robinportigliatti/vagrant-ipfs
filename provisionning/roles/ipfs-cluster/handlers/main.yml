@@ -1,0 +1,12 @@
+# roles/ipfs-cluster/handlers/main.yml
+---
+  - name: reload systemd
+    systemd: daemon_reload=yes
+    notify: restart IPFS
+
+  - name: "restart IPFS Cluster"
+    service:
+      name: ipfs-cluster
+      enabled: yes
+      state: restarted
+      use: systemd

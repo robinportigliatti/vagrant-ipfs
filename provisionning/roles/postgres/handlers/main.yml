@@ -1,0 +1,22 @@
+# roles/go-ipfs/main.yml
+---
+  - name: reload systemd
+    become: yes
+    systemd: daemon_reload=yes
+    notify: restart IPFS
+
+  - name: restart ipfs-pubsub-listen-demo
+    become: yes
+    service:
+      name: ipfs-pubsub-listen-demo
+      enabled: yes
+      state: restarted
+      use: systemd
+
+  - name: restart postgres
+    become: yes
+    service:
+      name: postgresql-14
+      enabled: yes
+      state: restarted
+      use: systemd

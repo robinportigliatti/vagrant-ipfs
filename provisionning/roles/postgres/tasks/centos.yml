@@ -1,0 +1,86 @@
+# roles/postgres/tasks/main.yml
+---
+  - name: "Centos: Add PostgreSQL repository"
+    yum_repository:
+      name: postgresql
+      description: PostgreSQL repository for package
+      baseurl: https://download.postgresql.org/pub/repos/yum/{{ postgres_version }}/redhat/rhel-$releasever-$basearch
+      gpgcheck: false
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+  - name: "CentOs: Install PostgreSQL {{ postgres_version }}"
+    yum:
+      name: "postgresql{{ postgres_version }},postgresql{{ postgres_version }}-server,postgresql{{ postgres_version }}-contrib,postgresql{{ postgres_version }}-libs, postgresql-contrib"
+      update_cache: yes
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+  - name: Clean up PostgreSQL data directory
+    become_user: postgres
+    file:
+      path: "/var/lib/pgsql/{{ postgres_version }}/data"
+      force: yes
+      state: absent
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+  - name: "Centos: Create PostgreSQL data directory"
+    become_user: postgres
+    file:
+      path: "/var/lib/pgsql/{{ postgres_version }}/data"
+      force: yes
+      state: directory
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+  - name: "Centos:Init Postgresql {{ postgres_version }}"
+    become_user: postgres
+    shell: "/usr/pgsql-{{ postgres_version }}/bin/initdb --data-checksums -D /var/lib/pgsql/{{ postgres_version }}/data/"
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+  - name: Copy database configuration
+    template:
+      src: full_postgresql.conf.j2
+      dest: "/var/lib/pgsql/{{ postgres_version }}/data/postgresql.conf"
+      group: postgres
+      mode: '0644'
+      owner: postgres
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+  - name: Copy user access configuration
+    template:
+      src: pg_hba.conf.j2
+      dest: "/var/lib/pgsql/{{ postgres_version }}/data/pg_hba.conf"
+      group: postgres
+      mode: '0640'
+      owner: postgres
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+  - name: Copy pgpass configuration
+    template:
+      src: pgpass.j2
+      dest: /var/lib/pgsql/.pgpass
+      group: postgres
+      mode: '0600'
+      owner: postgres
+
+  - name: Copy database configuration
+    template:
+      src: full_postgresql.conf.j2
+      dest: "/var/lib/pgsql/{{ postgres_version }}/data/postgresql.conf"
+      group: postgres
+      mode: '0644'
+      owner: postgres
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+  - name: Start PostgreSQL
+    systemd:
+      name: postgresql-{{ postgres_version }}
+      state: started
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+  - name: Create user replication
+    postgresql_user:
+      name: replicator
+      password: replication
+      encrypted: yes
+      role_attr_flags: LOGIN,REPLICATION
+    become_user: postgres
+    when: postgres_role == "primary"

@@ -1,0 +1,5 @@
+# roles/postgres/defaults/main.yml
+---
+  postgres_version: "14"
+#archive_command: "/usr/local/bin/ipfs-cluster-ctl --quiet add %p | awk '{print "%f" " " $0}' >> /tmp/ipfs_postgres.manifest"
+  postgres_role: "primary"

@@ -1,0 +1,9 @@
+# group_vars/all/vars.yml
+---
+  ipfs_bootstrap_ip_address: "192.168.60.12"
+  ipfs_bootstrap_peer_id: "QmequfAVEGjPLZJHr1nx6VeVWwtwVDHtcbvkXNbDuoYboV"
+  common_hosts:
+    - line: "192.168.60.11 ipfs_1"
+      regexp: '^192\.168\.60\.11 ipfs_1$'
+    - line: "192.168.60.12 ipfs_2"
+      regexp: '^192\.168\.60\.12 ipfs_2$'

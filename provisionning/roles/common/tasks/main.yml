@@ -1,0 +1,28 @@
+# roles/common/tasks/main.yml
+---
+  - name: "Centos: Install packages"
+    yum:
+      name: "{{ common_packages }}"
+      state: "latest"
+      update_cache: "yes"
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+  - name: "Debian : Install packages"
+    apt:
+      name: "{{ common_packages }}"
+      state: "latest"
+      update_cache: "yes"
+    when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+  - name: Replace a localhost entry with our own
+    ansible.builtin.lineinfile:
+      path: /etc/hosts
+      regexp: "{{ current_common_host.regexp }}"
+      line: "{{ current_common_host.line }}"
+      owner: root
+      group: root
+      mode: '0644'
+    with_items:
+      - "{{ common_hosts }}"
+    loop_control:
+      loop_var: current_common_host

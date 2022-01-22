@@ -1,0 +1,22 @@
+---
+# tasks file for go-ipfs
+
+  - name: "make ipfs group"
+    become: yes
+    group:
+      state: present
+      name: "{{ ipfs_sys_group_name }}"
+
+  - name: make ipfs user
+    become: yes
+    user:
+      name: "{{ ipfs_sys_user_name }}"
+      group: "{{ ipfs_sys_group_name }}"
+      shell: /bin/bash
+      home: "{{ ipfs_sys_user_home }}"
+      comment: IPFS user
+      system: yes
+      state: present
+
+  - import_tasks: install.yml
+  - import_tasks: initialize.yml

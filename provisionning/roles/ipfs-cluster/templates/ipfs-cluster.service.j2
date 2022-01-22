@@ -1,0 +1,11 @@
+[Unit]
+Description=IPFS Cluster daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/ipfs-cluster-service daemon
+Restart=on-failure
+User={{ ipfs_cluster_sys_user_name }}
+
+[Install]
+WantedBy=multi-user.target

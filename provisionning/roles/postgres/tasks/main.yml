@@ -1,0 +1,8 @@
+# roles/postgres/tasks/main.yml
+---
+  - name: Install prerequisites
+    import_tasks: prerequisites.yml
+
+  - name: "Centos"
+    import_tasks: centos.yml
+    when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'

@@ -1,0 +1,12 @@
+# roles/ipfs-cluster/defaults/main.yml
+---
+  ipfs_cluster_tars:
+    - src: "https://dist.ipfs.io/ipfs-cluster-service/v0.14.3/ipfs-cluster-service_v0.14.3_linux-amd64.tar.gz"
+    - src: "https://dist.ipfs.io/ipfs-cluster-ctl/v0.14.3/ipfs-cluster-ctl_v0.14.3_linux-amd64.tar.gz"
+    - src: "https://dist.ipfs.io/ipfs-cluster-follow/v0.14.3/ipfs-cluster-follow_v0.14.3_linux-amd64.tar.gz"
+  ipfs_cluster_sys_user_home: "/home/ipfs"
+  ipfs_cluster_sys_user_name: "ipfs"
+  ipfs_cluster_sys_group_name: "ipfs"
+  ipfs_cluster_secret: "2a758cfe27eb16127a0acfd9b93f3b71555b9285bb1fb1925a6b49cb90a0bcef"
+  #ipfs_cluster_peer_id: ""
+  #ipfs_cluster_private_key: ""

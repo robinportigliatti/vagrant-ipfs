@@ -1,0 +1,18 @@
+# roles/go/tasks/install.yml
+---
+  - name: "Removing last go installation"
+    ansible.builtin.file:
+      path: /usr/local/go
+      state: "absent"
+
+  - name: "Extracting go archive to /usr/local/go"
+    ansible.builtin.unarchive:
+      src: "https://go.dev/dl/go{{ go_version }}.linux-amd64.tar.gz"
+      dest: "/usr/local"
+      remote_src: "yes"
+
+  - name: "Adding go to path"
+    ansible.builtin.lineinfile:
+      path: "/home/vagrant/.bash_profile"
+      regexp: '^export PATH=$PATH:/usr/local/go/bin'
+      line: "export PATH=$PATH:/usr/local/go/bin"

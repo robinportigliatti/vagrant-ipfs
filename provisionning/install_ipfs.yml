@@ -1,0 +1,36 @@
+- hosts: all
+  gather_facts: yes
+  become: yes
+  tasks:
+    - name: Exécution du rôle common
+      include_role:
+        name: common
+        tasks_from: main.yml
+
+    #- name: Exécution du rôle go
+    #  include_role:
+    #    name: go
+    #    tasks_from: install.yml
+
+    - name: Exécution du rôle postgres
+      include_role:
+        name: postgres
+
+    - name: Exécution de go-ipfs
+      include_role:
+        name: go-ipfs
+        tasks_from: install.yml
+
+    - name: Exécution de go-ipfs
+      include_role:
+        name: go-ipfs
+        tasks_from: initialize.yml
+
+    - name: Exécution de ipfs-cluster
+      include_role:
+        name: ipfs-cluster
+
+    - name: Exécution de ipfs-cluster
+      include_role:
+        name: postgres
+        tasks_from: standby.yml
