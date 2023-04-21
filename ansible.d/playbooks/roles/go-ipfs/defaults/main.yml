@@ -3,4 +3,4 @@
   ipfs_sys_group_name: "ipfs"
   ipfs_sys_user_name: "ipfs"
   ipfs_sys_user_home: "/home/ipfs"
-  ipfs_version: "v0.11.0"
+  ipfs_version: "v0.19.1"

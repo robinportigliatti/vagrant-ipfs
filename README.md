@@ -65,12 +65,12 @@ Sur la node ipfs_2 en tant que postgres:
 
 Pour afficher le contenu et voir que tout a bien marché:
 ```
-ipfs cat QmRzQT5ka4AzUs97Wh1wjoB8svHnRVb74M1aUPDr4Ny6eU
+/usr/local/bin/ipfs cat QmRzQT5ka4AzUs97Wh1wjoB8svHnRVb74M1aUPDr4Ny6eU
 ```
 
 Pour ajouter le fichier à la node ipfs_2:
 ```
-ipfs pin add QmRzQT5ka4AzUs97Wh1wjoB8svHnRVb74M1aUPDr4Ny6eU
+/usr/local/bin/ipfs pin add QmRzQT5ka4AzUs97Wh1wjoB8svHnRVb74M1aUPDr4Ny6eU
 ```
 
 # Archivage
@@ -81,7 +81,7 @@ ipfs pin add QmRzQT5ka4AzUs97Wh1wjoB8svHnRVb74M1aUPDr4Ny6eU
 
 C'est sur le noeud secondaire que nous allons nous abonner à l'abonnement, ici `demo`:
 ```
-ipfs pubsub sub demo
+/usr/local/bin/ipfs pubsub sub demo
 ```
 
 ### Noeud primaire
@@ -89,7 +89,7 @@ ipfs pubsub sub demo
 Nous mettons en `archive_command` la commande ci-dessous:
 
 ```
-ipfs-cluster-ctl add --quiet %p | awk '{ print $1 " " "%f" }' | ipfs pubsub pub demo
+/usr/local/bin/ipfs-cluster-ctl add --quiet %p | awk '{ print $1 " " "%f" }' | ipfs pubsub pub demo
 ```
 
 On reload le service postgres
@@ -107,7 +107,7 @@ SELECT pg_switch_wal();
 Sur le noeud secondaire il sera possible de voir le nouveau hash du fichier dans la console:
 
 ```
-[ipfs@ipfs2 ~]$ ipfs pubsub sub demo
+[ipfs@ipfs2 ~]$ /usr/local/bin/ipfs pubsub sub demo
 QmWpQt68B6iv7fuNrr3aRNHB2JUGXrRbBvvo4SGLkoDcDx
 ```
 

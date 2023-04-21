@@ -15,18 +15,18 @@ Vagrant.configure("2") do |config|
       ipfs.vm.box = "centos/7"
       ipfs.vm.hostname = "ipfs#{ipfs_cpt}"
       ipfs.vm.network :private_network, ip: "192.168.60.1#{ipfs_cpt}"
-      ipfs.vm.provider "virtualbox" do |v|
+      ipfs.vm.provider "libvirt" do |v|
         v.cpus = 2
         v.memory = 1024
       end
+      if ipfs_cpt == N then
+        ipfs.vm.provision "ansible" do |ansible|
+          ansible.playbook = "../ansible.d/playbooks/install_ipfs.yml"
+          ansible.compatibility_mode = '2.0'
+          ansible.inventory_path = "../ansible.d/environments/generic/inventory"
+        end
+      end
     end
-  end
-
-
-  config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "provisionning/install_ipfs.yml"
-    ansible.compatibility_mode = '2.0'
-    ansible.inventory_path = "provisionning/inventory"
   end
 
 end # Vagrant.configure("2") do |config|

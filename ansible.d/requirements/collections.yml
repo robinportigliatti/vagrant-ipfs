@@ -1,0 +1,7 @@
+collections:
+  - git+git@github.com:dalibo/ansible-collection-temboard.git,init
+  - git+git@gitlab.dalibo.info:teamsocle/ansible-collection-essential.git
+  - git+git@gitlab.dalibo.info:teamsocle/ansible-collection-advanced.git
+  - git+git@gitlab.dalibo.info:teamsocle/ansible-collection-extras.git
+  - git+https://gitlab.com/dalibo/pglift-ansible.git
+  - community.crypto
