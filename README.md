@@ -1,202 +1,191 @@
-# Installer ansible
+# Install ansible
 
-Suivre le tuto d'installation [ici](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-and-upgrading-ansible-with-pip).
+Follow this [link](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#installing-and-upgrading-ansible-with-pip).
 
-# Installer vagrant
+# Install vagrant
 
-Suivre le tuto d'installation [ici](https://www.vagrantup.com/docs/installation).
+Follow this [link](https://www.vagrantup.com/docs/installation).
 
-# Configurer vagrant
+# Creating VM
 
-Si vous utiliser `libvirt` pour la virtualisation il faudra installer le plugin `libvirt` à partir de vagrant.
+Create and provision the VMs :
 
 ```
-vagrant plugin install libvirt
+make all
 ```
 
-# Création des VMs
-
-Pour lancer la création et la provision de toutes les VMs :
+Only provision :
 ```
-vagrant up --provision [--provider libvirt]
+make provision
 ```
 
-Pour lancer la création et la provision d'une VM :
-```
-vagrant up [ipfs_1 | ipfs_2] --provision  [--provider libvirt]
-```
-
-# Accès au VM
+# Access to the VMs
 
 ```
 vagrant ssh [ipfs_1 | ipfs_2]
 ```
 
-| Nom               | Adresse Ip    |
+| Name               | Ip    |
 | ----------------- | ------------- |
 | ipfs_1            | 192.168.60.11 |
 | ipfs_2            | 192.168.60.12 |
 
-# Suppression des VMs
+# Destroy VMs
 
-Pour lancer la suppression de toutes les VMs :
 ```
-vagrant destroy --force
-```
-
-Pour lancer la suppression et d'une VM :
-```
-vagrant destroy [ipfs_1 | ipfs_2 ] --force
+make destroy
 ```
 
-# Utilisation de IPFS
+# Usage of IPFS
 
-Sur la node ipfs_1 en tant que postgres:
+On node ipfs_1 as **postgres** :
 ```
--bash-4.2$ echo "Je suis sur ipfs_1" > 1.txt
+-bash-4.2$ echo "I am on ipfs_1" > 1.txt
 -bash-4.2$ ipfs add 1.txt
 added QmRzQT5ka4AzUs97Wh1wjoB8svHnRVb74M1aUPDr4Ny6eU 1.txt
  17 B / 17 B [==================================================================================] 100.00%
 ```
 
-Récupérer le hash `QmRzQT5ka4AzUs97Wh1wjoB8svHnRVb74M1aUPDr4Ny6eU`
+Get the hash `QmRzQT5ka4AzUs97Wh1wjoB8svHnRVb74M1aUPDr4Ny6eU`
 
-Sur la node ipfs_2 en tant que postgres:
+On the node ipfs_2 as **postgres**:
 
-Pour afficher le contenu et voir que tout a bien marché:
+To display the content :
+
 ```
 /usr/local/bin/ipfs cat QmRzQT5ka4AzUs97Wh1wjoB8svHnRVb74M1aUPDr4Ny6eU
 ```
 
-Pour ajouter le fichier à la node ipfs_2:
+To pin the file on ipfs_2:
 ```
 /usr/local/bin/ipfs pin add QmRzQT5ka4AzUs97Wh1wjoB8svHnRVb74M1aUPDr4Ny6eU
 ```
 
-# Archivage
+# Archiving
 
-## Initialisation
+## Init
 
-### Noeud secondaire
+### Secondary node
 
-C'est sur le noeud secondaire que nous allons nous abonner à l'abonnement, ici `demo`:
+It is on the secondary node (ipfs_2) that we subscribe to the publication, here `demo`:
+
 ```
 /usr/local/bin/ipfs pubsub sub demo
 ```
 
-### Noeud primaire
+### Primary node
 
-Nous mettons en `archive_command` la commande ci-dessous:
+We update the `archive_command` parameter with the following command :
 
 ```
 /usr/local/bin/ipfs-cluster-ctl add --quiet %p | awk '{ print $1 " " "%f" }' | ipfs pubsub pub demo
 ```
 
-On reload le service postgres
+We reload the postgresql server:
 
 ```
-service postgresql-14 reload
+sudo service postgresql-14 reload
 ```
 
-Puis sur la console psql on lance un switch des wals:
+Then with psql we switch the WAL:
 
 ```
-SELECT pg_switch_wal();
+psql -c "SELECT pg_switch_wal();"
 ```
 
-Sur le noeud secondaire il sera possible de voir le nouveau hash du fichier dans la console:
+On the secondary node, it will be possible de see the new hash from the console:
 
 ```
 [ipfs@ipfs2 ~]$ /usr/local/bin/ipfs pubsub sub demo
 QmWpQt68B6iv7fuNrr3aRNHB2JUGXrRbBvvo4SGLkoDcDx
 ```
 
-## Lecture d'un WAL
+## Reading a WAL file
 
-A partir du second noeud nous récupérons le fichier avec le hash récupéré
-à l'étape précédente:
-
-```
-ipfs get QmWpQt68B6iv7fuNrr3aRNHB2JUGXrRbBvvo4SGLkoDcDx
-```
-
-# log_shipping
-
-## Noeud primaire
-
-Sur le noeud primaire l'archive_command ajoute les fichiers à IPFS et prévient les abonnés du changements:
+From the secondary node we get the file with the hash we got from earlier
 
 ```
-archive_command = 'ipfs-cluster-ctl add --quiet %p | awk \'{ print $1 " " "%f" }\' | ipfs pubsub pub demo'
+/usr/local/bin/ipfs get QmWpQt68B6iv7fuNrr3aRNHB2JUGXrRbBvvo4SGLkoDcDx
 ```
 
-## Noeud secondaire
+# Log shipping
 
-Le service `ipfs-pubsub-listen-demo` écoute le topic `demo` et ajout dans les WAL dans `/tmp/demo/pg_wal`:
+## Primary node
+
+On the primary node `archive_command` paaremeter is set to execute a command that will add files to the IPFS
+cluster and will warn the subscriber for any change:
+
+```
+archive_command = '/usr/local/bin/ipfs-cluster-ctl add --quiet %p | awk \'{ print $1 " " "%f" }\' | ipfs pubsub pub demo'
+```
+
+## Secondary node
+
+On the secondary node, the service `ipfs-pubsub-listen-demo` listens to the `demo` topic and get the WAL to `/tmp/demo/pg_wal`:
+
 ```
 #!/bin/bash
 
 mkdir -p /tmp/demo/pg_wal
-ipfs pubsub sub demo | while read -r line
+/usr/local/bin/ipfs pubsub sub demo | while read -r line
 do
     read -a arr <<< $line
 
     echo "/tmp/demo/pg_wal/${arr[1]}"
-    ipfs get ${arr[0]} --output="/tmp/demo/pg_wal/${arr[1]}"
+    /usr/local/bin/ipfs get ${arr[0]} --output="/tmp/demo/pg_wal/${arr[1]}"
     echo "File ${arr[1]} ready to be processed"
 done
 ```
 
-Postgres avec le restore_command copie les fichier dans `$PGDATA/pg_wal` et les supprime avec archive_cleanup_command:
+Then PostgreSQl with the command inside `restore_commande` paremeter copy the file inside `$PGDATA/pg_wal` and delete them with
+the command inside `archive_cleanup_command` parameter:
 
 ```
 restore_command = 'cp /tmp/demo/pg_wal/%f %p'
 archive_cleanup_command = 'pg_archivecleanup /tmp/demo/pg_wal %r'
 ```
 
-# Intérêt
+# Advantages
 
-Lors de l'ajout d'un WAL au réseau IPFS, ce WAL est propagé sur tous les noeuds faisant partie du réseau de notre cluster IPFS.
+When adding a WAL to the IPFS network this WAL is 
 
-Si une suppression a lieu sur le système de fichier du primaire, et que sur le primaire on décide de ne plus fournir (`unpin`) le fichier sur le noeud IPFS local, le fichier sera toujours accessible sur le réseau IPFS par les autres noeuds.
+When adding a WAL to the IPFS network, this WAL is propagated to all nodes that are part of our IPFS cluster network.
 
-Lorsqu'un secondaire voudra récupérer un fichier, il téléchargera le fichier sur tous les noeuds faisant partie du cluster. Améliorant le téléchargement du fichier (en théorie)
+If the WAL is deleted on the primary, it will stay on all other IPFS nodes. Even if it is unpinned.
+
+When a secondary node will need to get the file, it will download it from all others nodes and not from only one node.
 
 # Questions
 
-## Que se passe-t-il si un nouveau est ajouté ? les fichiers sont récupérés ?
+## What happens when an IPFS node is added to the network . Does the files will be automatically pinned ?
 
-Je pense qu'il ne sont pas `pin` (récupéré) mais seront forcément accessibles.
+No they, only those marked pinned will be stored on the IPFS node. All other files will accessible.
 
-A voir donc l'aspect `pin`.
-
-## DUMP dans IPFS ?
+## pg_dump inside IPFS ?
 
 ```
 pg_dump -Fc | ipfs add
 ```
 
-`-Fd ` ne marchera pas car il a besoin du filesystem.
+`-Fd ` won't work since it need access to the filesystem.
 
-## pg_base_backup dans IPFS ?
-
-Il faudra lancer le pg_basebackup
+## pg_base_backup inside IPFS ?
 
 ```
 pg_basebackup --pgdata=/tmp/demo/backup_tmp --format=t --gzip
 ```
 
-Puis `pin` le dossier à IPFS:
+Then `pin` the directory:
 
 ```
-$ ipfs-cluster-ctl add --quieter -r /tmp/demo/backup_tmp
+$ /usr/local/bin/ipfs-cluster-ctl add --quieter -r /tmp/demo/backup_tmp
 QmW6m3H9FQJbYwMZKKvWEUdoUWkfx9Y4HaZftvFJ8ty4kx
 ```
 
-Puis depuis un postgres récupérer le répertoire:
+Then from a postgresql node get the directory with the hash:
 
 ```
-$ ipfs get QmW6m3H9FQJbYwMZKKvWEUdoUWkfx9Y4HaZftvFJ8ty4kx
+$ /usr/local/bin/ipfs get QmW6m3H9FQJbYwMZKKvWEUdoUWkfx9Y4HaZftvFJ8ty4kx
 Saving file(s) to QmW6m3H9FQJbYwMZKKvWEUdoUWkfx9Y4HaZftvFJ8ty4kx
  3.34 MiB / 3.34 MiB [=======================================================================] 100.00% 0s
 $ ll QmW6m3H9FQJbYwMZKKvWEUdoUWkfx9Y4HaZftvFJ8ty4kx/*
@@ -206,18 +195,17 @@ total 3420
 -rw-------. 1 postgres postgres   17070 Jan 14 15:48 pg_wal.tar.gz
 ```
 
-## Comment se passe la purge des fichiers ?
+## When does the files are deleted from the cluster ?
 
-Lors de l'ajout d'un fichier au cluster IPFS, il faudra préciser `--expire-in`
-dont la valeur est en `s|m|h`:
-```
-ipfs-cluster-ctl add --quieter --expire-in 12h -r /tmp/demo/backup_tmp
-```
-
-Le backup sera disponible `pin` sur le cluster pendant 12 heures. Après il ne
-ce laps de temps il ne le sera plus et il faudra lancer le garbage collector sur
-tous les noeuds avec :
+When adding a file to the IPFS cluster, you will need to specify `--expire-in` argument!
 
 ```
-ipfs-cluster-ctl ipfs gc
+/usr/local/bin/ipfs-cluster-ctl add --quieter --expire-in 12h -r /tmp/demo/backup_tmp
+```
+
+Then all the files pinned to cluster will be available for 12 hours.
+And the garbage collector needs to be launched:
+
+```
+/usr/local/bin/ipfs-cluster-ctl ipfs gc
 ```
